@@ -88,7 +88,7 @@ class HjsonParser {
           skipWhiteSpace();
           try { v=readValue(); break; }
           catch (Exception exception2) { }
-          throw exception; // throw original error
+          throw new RuntimeException(exception); // throw original error
         }
         break;
     }
