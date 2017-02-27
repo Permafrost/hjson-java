@@ -104,21 +104,14 @@ class DsfMath implements IHjsonDsfProvider
 
   public JsonValue parse(String text)
   {
-    switch (text)
-    {
-      case "+inf":
-      case "inf":
-      case "+Inf":
-      case "Inf":
-        return new JsonNumber(Double.POSITIVE_INFINITY);
-      case "-inf":
-      case "-Inf":
-        return new JsonNumber(Double.NEGATIVE_INFINITY);
-      case "nan":
-      case "NaN":
-        return new JsonNumber(Double.NaN);
-      default:
-        return null;
+    if (text.equals("+inf") || text.equals("inf") || text.equals("+Inf") || text.equals("Inf")) {
+      return new JsonNumber(Double.POSITIVE_INFINITY);
+    } else if (text.equals("-inf") || text.equals("-Inf")) {
+      return new JsonNumber(Double.NEGATIVE_INFINITY);
+    } else if (text.equals("nan") || text.equals("NaN")) {
+      return new JsonNumber(Double.NaN);
+    } else {
+      return null;
     }
   }
 
