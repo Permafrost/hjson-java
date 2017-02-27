@@ -83,14 +83,17 @@ class HjsonParser {
         try {
           // assume we have a root object without braces
           return checkTrailing(readObject(true));
-        } catch (Exception exception) {
+        } catch (IOException exception) {
           // test if we are dealing with a single JSON value instead (true/false/null/num/"")
           reset();
           read();
           skipWhiteSpace();
-          try { return checkTrailing(readValue()); }
-          catch (Exception exception2) { }
-          throw new RuntimeException(exception); // throw original error
+          try {
+            return checkTrailing(readValue());
+          } catch (IOException exception2) {
+            // ignore exception
+          }
+          throw exception; // throw original error
         }
     }
   }
