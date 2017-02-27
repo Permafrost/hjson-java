@@ -2,7 +2,13 @@
   "text1": "This is a valid string value.",
   "text2": "a \\ is just a \\",
   "text3": "You need quotes\tfor escapes",
-  "text4": " untrimmed ",
+  "text4a": " untrimmed ",
+  "text4b": " untrimmed",
+  "text4c": "untrimmed ",
+  "notml1": "\n",
+  "notml2": "  \n",
+  "notml3": "\n  \n  \n  \n",
+  "notml4": "\t\n",
   "multiline1": "first line\n  indented line\nlast line",
   "multiline2": "first line\n  indented line\nlast line",
   "multiline3": "first line\n  indented line\nlast line\n",
@@ -49,6 +55,5 @@
     "one": "1",
     "two": "2",
     "minus": "-3"
-  },
-  "": "empty"
+  }
 }

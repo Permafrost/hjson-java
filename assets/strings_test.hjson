@@ -6,7 +6,14 @@
 
   text3: "You need quotes\tfor escapes"
 
-  text4: " untrimmed "
+  text4a: " untrimmed "
+  text4b: " untrimmed"
+  text4c: "untrimmed "
+
+  notml1: "\n"
+  notml2: "  \n"
+  notml3: "\n  \n  \n  \n"
+  notml4: "\t\n"
 
   # multiline string
 
@@ -75,6 +82,4 @@
     two: "2"
     minus: "-3"
   }
-
-  "": empty
 }

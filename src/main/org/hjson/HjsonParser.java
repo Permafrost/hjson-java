@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013, 2015 EclipseSource.
- * Copyright (c) 2015 Christian Zangl
+ * Copyright (c) 2015-2016 Christian Zangl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,13 +38,17 @@ class HjsonParser {
   private StringBuilder captureBuffer, peek;
   private boolean capture;
 
-  HjsonParser(String string) {
+  private IHjsonDsfProvider[] dsfProviders;
+
+  HjsonParser(String string, HjsonOptions options) {
     buffer=string;
     reset();
+    if (options!=null) dsfProviders=options.getDsfProviders();
+    else dsfProviders=new IHjsonDsfProvider[0];
   }
 
-  HjsonParser(Reader reader) throws IOException {
-    this(readToEnd(reader));
+  HjsonParser(Reader reader, HjsonOptions options) throws IOException {
+    this(readToEnd(reader), options);
   }
 
   static String readToEnd(Reader reader) throws IOException {
@@ -66,7 +70,6 @@ class HjsonParser {
   }
 
   JsonValue parse() throws IOException {
-    JsonValue v;
     // Braces for the root object are optional
 
     read();
@@ -75,24 +78,24 @@ class HjsonParser {
     switch (current) {
       case '[':
       case '{':
-        v=readValue();
-        break;
+        return checkTrailing(readValue());
       default:
         try {
           // assume we have a root object without braces
-          v=readObject(true);
+          return checkTrailing(readObject(true));
         } catch (Exception exception) {
           // test if we are dealing with a single JSON value instead (true/false/null/num/"")
           reset();
           read();
           skipWhiteSpace();
-          try { v=readValue(); break; }
+          try { return checkTrailing(readValue()); }
           catch (Exception exception2) { }
           throw new RuntimeException(exception); // throw original error
         }
-        break;
     }
+  }
 
+  JsonValue checkTrailing(JsonValue v) throws ParseException, IOException {
     skipWhiteSpace();
     if (!isEndOfText()) throw error("Extra characters in input: "+current);
     return v;
@@ -112,6 +115,8 @@ class HjsonParser {
     // returns string, true, false, or null.
     StringBuilder value=new StringBuilder();
     int first=current;
+    if (JsonValue.isPunctuatorChar(first))
+      throw error("Found a punctuator character '" + (char)first + "' when expecting a quoteless string (check your syntax)");
     value.append((char)current);
     for (;;) {
       read();
@@ -139,7 +144,7 @@ class HjsonParser {
         }
         if (isEol) {
           // remove any whitespace at the end (ignored in quoteless strings)
-          return new JsonString(value.toString().trim());
+          return HjsonDsf.parse(dsfProviders, value.toString().trim());
         }
       }
       value.append((char)current);
@@ -198,14 +203,13 @@ class HjsonParser {
         if (name.length()==0) throw error("Found ':' but no key name (for an empty key name use quotes)");
         else if (space>=0 && space!=name.length()) { index=start+space; throw error("Found whitespace in your key name (use quotes to include)"); }
         return name.toString();
-      }
-      else if (isWhiteSpace(current)) {
+      } else if (isWhiteSpace(current)) {
         if (space<0) space=name.length();
-      }
-      else if (current<' ' || current=='{' || current=='}' || current=='[' || current==']' || current==',') {
+      } else if (current<' ') {
+        throw error("Name is not closed");
+      } else if (JsonValue.isPunctuatorChar(current)) {
         throw error("Found '" + (char)current + "' where a key name was expected (check your syntax or use quotes if the key name includes {}[],: or whitespace)");
-      }
-      else name.append((char)current);
+      } else name.append((char)current);
       read();
     }
   }

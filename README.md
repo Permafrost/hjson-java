@@ -1,6 +1,6 @@
 # hjson-java
 
-[![Build Status](https://img.shields.io/travis/laktak/hjson-java.svg?style=flat-square)](http://travis-ci.org/laktak/hjson-java)
+[![Build Status](https://img.shields.io/travis/hjson/hjson-java.svg?style=flat-square)](http://travis-ci.org/hjson/hjson-java)
 [![Maven Central](https://img.shields.io/maven-central/v/org.hjson/hjson.svg?style=flat-square)](http://search.maven.org/#search|ga|1|g%3A%22org.hjson%22%20a%3A%22hjson%22)
 [![Javadoc](https://javadoc-emblem.rhcloud.com/doc/org.hjson/hjson/badge.svg?style=flat-square&color=blue)](http://www.javadoc.io/doc/org.hjson/hjson)
 
@@ -28,6 +28,14 @@
 ```
 
 The Java implementation of Hjson is based on [minimal-json](https://github.com/ralfstx/minimal-json). For other platforms see [hjson.org](http://hjson.org).
+
+# CLI
+
+You can install the Hjson command line tool by downloading and unpacking the latest [*hjson.zip*](https://github.com/hjson/hjson-java/releases).
+
+- run `hjson -h` for help
+- `hjson file.json` will convert to Hjson.
+- `hjson -j file.hjson` will convert to JSON.
 
 # Install from Maven Central
 
@@ -164,7 +172,7 @@ jsonObject.toString(); // plain
 
 # API
 
-[Documentation](http://laktak.github.io/hjson-java/)
+[Documentation](http://hjson.github.io/hjson-java/)
 
 # History
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Christian Zangl
+ * Copyright (c) 2015-2016 Christian Zangl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,12 +28,19 @@ import java.util.regex.Pattern;
 
 class HjsonWriter {
 
-  boolean emitRootBraces;
+  private boolean emitRootBraces;
+  private IHjsonDsfProvider[] dsfProviders;
+
   static Pattern needsEscapeName=Pattern.compile("[,\\{\\[\\}\\]\\s:#\"]|//|/\\*|'''");
 
   public HjsonWriter(HjsonOptions options) {
-    if (options!=null) emitRootBraces=options.emitRootBraces;
-    else emitRootBraces=true;
+    if (options!=null) {
+      emitRootBraces=options.getEmitRootBraces();
+      dsfProviders=options.getDsfProviders();
+    } else {
+      emitRootBraces=true;
+      dsfProviders=new IHjsonDsfProvider[0];
+    }
   }
 
   void nl(Writer tw, int level) throws IOException {
@@ -47,6 +54,16 @@ class HjsonWriter {
       tw.write("null");
       return;
     }
+
+    // check for DSF
+    String dsfValue=HjsonDsf.stringify(dsfProviders, value);
+    if (dsfValue!=null)
+    {
+      tw.write(separator);
+      tw.write(dsfValue);
+      return;
+    }
+
     switch (value.getType()) {
       case OBJECT:
         JsonObject obj=value.asObject();
@@ -113,14 +130,12 @@ class HjsonWriter {
     }
 
     if (doEscape ||
-      HjsonParser.isWhiteSpace(left) ||
+      HjsonParser.isWhiteSpace(left) || HjsonParser.isWhiteSpace(right) ||
       left=='"' ||
       left=='\'' && left1=='\'' && left2=='\'' ||
       left=='#' ||
       left=='/' && (left1=='*' || left1=='/') ||
-      left=='{' ||
-      left=='[' ||
-      HjsonParser.isWhiteSpace(right) ||
+      JsonValue.isPunctuatorChar(left) ||
       HjsonParser.tryParseNumber(value, true)!=null ||
       startsWithKeyword(value)) {
       // If the String contains no control characters, no quote characters, and no
@@ -129,13 +144,16 @@ class HjsonWriter {
       // format or we must replace the offending characters with safe escape
       // sequences.
 
-      boolean test=false;
-      for(char ch : valuec) { if (needsEscape(ch)) { test=true; break; } }
-      if (!test) { tw.write(separator+"\""+value+"\""); return; }
+      boolean noEscape=true;
+      for(char ch : valuec) { if (needsEscape(ch)) { noEscape=false; break; } }
+      if (noEscape) { tw.write(separator+"\""+value+"\""); return; }
 
-      test=false;
-      for(char ch : valuec) { if (needsEscapeML(ch)) { test=true; break; } }
-      if (!test && !value.contains("'''")) writeMLString(value, tw, level, separator);
+      boolean noEscapeML=true, allWhite=true;
+      for(char ch : valuec) {
+        if (needsEscapeML(ch)) { noEscapeML=false; break; }
+        else if (!HjsonParser.isWhiteSpace(ch)) allWhite=false;
+      }
+      if (noEscapeML && !allWhite && !value.contains("'''")) writeMLString(value, tw, level, separator);
       else tw.write(separator+"\""+JsonWriter.escapeString(value)+"\"");
     }
     else tw.write(separator+value);
@@ -201,6 +219,7 @@ class HjsonWriter {
     switch (c) {
       case '\n':
       case '\r':
+      case '\t':
         return false;
       default:
         return needsQuotes(c);
